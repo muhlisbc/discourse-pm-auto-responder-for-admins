@@ -1,0 +1,6 @@
+plugins:
+  enable_pm_auto_responder_for_admins:
+    default: true
+    client: true
+  delay_between_auto_responder_message_in_hour:
+    default: 1

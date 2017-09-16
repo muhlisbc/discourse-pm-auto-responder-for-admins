@@ -1,0 +1,5 @@
+en:
+  js:
+    mmn_auto_respond_pm:
+      enable: "Enable PM auto resonder"
+      disable: "Disable PM auto resonder"

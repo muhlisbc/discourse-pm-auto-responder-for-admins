@@ -1,0 +1,4 @@
+en:
+  site_settings:
+    enable_pm_auto_responder_for_admins: "Enable PM auto responder for admins"
+    delay_between_auto_responder_message_in_hour: "Delay between PM auto responder message in hour. Default: 1"
