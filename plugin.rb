@@ -1,6 +1,6 @@
 # name: discourse-pm-auto-responder-for-admins
 # about: Discourse Private Message Auto Responder For Admins
-# version: 0.1
+# version: 0.2
 # authors: Muhlis Budi Cahyono (muhlisbc@gmail.com)
 # url: https://github.com/muhlisbc/discourse-pm-auto-responder-for-admins
 
@@ -17,27 +17,25 @@ after_initialize {
         after_commit :send_auto_responder, on: :create
 
         def send_auto_responder
-          if SiteSetting.enable_pm_auto_responder_for_admins
-            post_topic = topic
-            if post_topic.private_message?
-              if !user.admin # if message is sent by regular user
-                admins    = User.where("id > ?", 0).where(admin: true)
-                admin_ids = admins.pluck(:id)
-                user_ids  = post_topic.topic_users.pluck(:user_id)
+          return if !SiteSetting.enable_pm_auto_responder_for_admins
+          
+          post_topic = topic
+          
+          return if !post_topic.private_message? # return if regular topic
 
-                admins_in_pm = (admin_ids & user_ids)
-                if !admins_in_pm.empty?
-                  admins.each do |admin|
-                    if admins_in_pm.include?(admin.id) && admin.custom_fields["mmn_auto_respond_pm"] && (admin.custom_fields["mmn_auto_respond_message"].to_s.strip.length > 0) && ((Time.now.to_i - post_topic.custom_fields["last_auto_respond_by_admin_#{admin.id}"].to_i) >= SiteSetting.delay_between_auto_responder_message_in_hour.to_i.hour.to_i)
-                      PostCreator.create!(admin, topic_id: post_topic.id, raw: admin.custom_fields["mmn_auto_respond_message"], skip_validation: true)
-                      post_topic.custom_fields["last_auto_respond_by_admin_#{admin.id}"] = Time.now.to_i
-                    end
-                  end
-                  post_topic.save!
-                end
-              end
+          return if user.admin # return if message is sent by admin
+
+          admins    = User.where("id > ?", 0).where(admin: true) # select admins
+          user_ids  = post_topic.topic_allowed_users.pluck(:user_id)
+
+          admins.each do |admin|
+            if user_ids.include?(admin.id) && admin.custom_fields["mmn_auto_respond_pm"] && (admin.custom_fields["mmn_auto_respond_message"].to_s.strip.length > 0) && ((Time.now.to_i - post_topic.custom_fields["last_auto_respond_by_admin_#{admin.id}"].to_i) >= SiteSetting.delay_between_auto_responder_message_in_hour.to_i.hour.to_i)
+              PostCreator.create!(admin, topic_id: post_topic.id, raw: admin.custom_fields["mmn_auto_respond_message"], skip_validation: true)
+              post_topic.custom_fields["last_auto_respond_by_admin_#{admin.id}"] = Time.now.to_i
             end
           end
+          post_topic.save!
+
         end
       }
     end
@@ -49,11 +47,7 @@ after_initialize {
   User.register_custom_field_type("mmn_auto_respond_message", :text)
 
   add_to_serializer(:user, :custom_fields, false) {
-    if object.custom_fields == nil then
-      {}
-    else
-      object.custom_fields
-    end
+    object.custom_fields || {}
   }
 
   module ::MmnAutoRespondPm
