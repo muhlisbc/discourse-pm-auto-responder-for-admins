@@ -1,6 +1,6 @@
 # name: discourse-pm-auto-responder-for-admins
 # about: Discourse Private Message Auto Responder For Admins
-# version: 0.3
+# version: 0.4
 # authors: Muhlis Budi Cahyono (muhlisbc@gmail.com)
 # url: https://github.com/muhlisbc/discourse-pm-auto-responder-for-admins
 
